@@ -255,10 +255,17 @@
         <i class="fa-solid fa-robot"></i>
     </div>
 
-    <div id="chatbot-window">
-        <div class="chat-header">
+   <div id="chatbot-window" style="display: none;">
+        <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; background: #0284c7; color: white; padding: 10px 15px; border-top-left-radius: 8px; border-top-right-radius: 8px;">
             <span><i class="fa-solid fa-robot"></i> CSC AI Digital Assistant</span>
-            <span class="close-btn" onclick="toggleChatbot()">&times;</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Sound On/Off Button -->
+                <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute Voice" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">
+                    <i id="mute-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+                <!-- Close Button -->
+                <span class="close-btn" onclick="toggleChatbot()" title="Close" style="cursor: pointer; font-size: 20px; font-weight: bold;">&times;</span>
+            </div>
         </div>
         <div class="chat-body" id="chat-body">
             <div class="bot-msg">Hello! I am your CSC AI Assistant. You can ask me about services by typing or speaking.</div>
@@ -750,7 +757,7 @@
         changeLanguage(savedLang);
     });
     </script>
-    <script src="script.js"></script>
-    <script src="chatbot.js"></script>
+    <script src="JS/script.js"></script>
+    <script src="JS/chatbot.js"></script>
 </body>
 </html>

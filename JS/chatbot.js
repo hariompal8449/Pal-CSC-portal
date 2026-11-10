@@ -1,119 +1,191 @@
-// बोलकर वेलकम करने वाला फंक्शन (Text-to-Speech)
-function speakText(textToSpeak) {
+// Global Mute State
+let isMuted = false;
+
+// 1. Mute / Unmute Toggle Function
+window.toggleMute = function() {
+    isMuted = !isMuted;
+    const muteIcon = document.getElementById('mute-icon');
+    
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const speech = new SpeechSynthesisUtterance(textToSpeak);
-        speech.lang = 'hi-IN';
-        speech.rate = 1.0;
-        window.speechSynthesis.speak(speech);
     }
-}
 
-// चैटबॉट खोलने और बंद करने का ग्लोबल फंक्शन
-window.toggleChatbot = function() {
-    const chatWin = document.getElementById('chatbot-window');
-    if (!chatWin) return;
-    
-    const isOpen = chatWin.style.display === 'flex';
-    chatWin.style.display = isOpen ? 'none' : 'flex';
-
-    if (!isOpen) {
-        const chatBody = document.getElementById('chat-body');
-        if (chatBody && chatBody.children.length === 0) {
-            const welcomeMsg = "नमस्कार! मैं आपका CSC AI सहायक हूँ। आप मुझसे सेवाओं के बारे में बोलकर या लिखकर पूछ सकते हैं।";
-            addMessage(welcomeMsg, 'bot-msg');
-            speakText(welcomeMsg);
+    if (muteIcon) {
+        if (isMuted) {
+            muteIcon.className = "fa-solid fa-volume-xmark";
+        } else {
+            muteIcon.className = "fa-solid fa-volume-high";
         }
-        const inputField = document.getElementById('user-input');
-        if (inputField) inputField.focus();
     }
 };
 
-window.handleKeyPress = function(e) {
-    if (e.key === 'Enter') {
+// 2. Text to Speech Function (English - en-US)
+function speakText(textToSpeak) {
+    if (isMuted) return;
+
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'en-US';
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+};
+
+// 3. Chatbot Open / Close Function
+window.toggleChatbot = function() {
+    const chatbotWindow = document.getElementById('chatbot-window');
+    if (chatbotWindow) {
+        const currentDisplay = window.getComputedStyle(chatbotWindow).display;
+        const isOpen = currentDisplay === 'flex' || currentDisplay === 'block';
+        
+        chatbotWindow.style.display = isOpen ? 'none' : 'flex';
+
+        if (isOpen) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        } else {
+            const chatBody = document.getElementById('chat-body');
+            if (chatBody && chatBody.children.length === 1) {
+                speakText("Hello! I am your CSC AI Assistant. Type any service name to get its direct link.");
+            }
+            const inputField = document.getElementById('user-input');
+            if (inputField) inputField.focus();
+        }
+    }
+};
+
+window.handleKeyPress = function(event) {
+    if (event.key === 'Enter') {
         window.sendMessage();
     }
 };
 
+// 4. Universal Auto-Scan Website Search & Link Generator
 window.sendMessage = function() {
-    const input = document.getElementById('user-input');
-    if (!input) return;
-    
-    const query = input.value.trim();
-    if (!query) return;
+    const inputField = document.getElementById('user-input');
+    const chatBody = document.getElementById('chat-body');
+    if (!inputField || !chatBody) return;
 
-    addMessage(query, 'user-msg');
-    input.value = '';
+    const userText = inputField.value.trim();
+    if (userText === '') return;
+
+    // Display User Message
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = 'user-msg';
+    userMsgDiv.style.textAlign = 'right';
+    userMsgDiv.style.margin = '8px 0';
+    userMsgDiv.innerHTML = `<span style="background: #2563eb; color: #fff; padding: 8px 12px; border-radius: 8px; display: inline-block;">${userText}</span>`;
+    chatBody.appendChild(userMsgDiv);
+
+    inputField.value = '';
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    // Show Typing Indicator
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'bot-msg';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.style.margin = '8px 0';
+    typingDiv.innerHTML = `<span style="background: #e2e8f0; color: #64748b; padding: 8px 12px; border-radius: 8px; display: inline-block; font-style: italic;">Searching portal services...</span>`;
+    chatBody.appendChild(typingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
 
     setTimeout(() => {
-        const reply = getAIResponse(query);
-        addMessage(reply, 'bot-msg');
-    }, 300);
+        // Remove Typing Indicator
+        const typingElem = document.getElementById('typing-indicator');
+        if (typingElem) {
+            typingElem.remove();
+        }
+
+        let botReply = "";
+        let speechReply = "";
+        const lowerText = userText.toLowerCase();
+
+        // Specific Detailed Document Checklists for Major Services
+        if (lowerText.includes('aadhaar') || lowerText.includes('आधार')) {
+            botReply = `<b>Aadhaar Card Services & Documents:</b><br><br>
+            Required documents for new enrollment or update:<br>
+            1. <b>Identity Proof:</b> Voter ID, PAN Card, or Passport<br>
+            2. <b>Address Proof:</b> Electricity Bill, Ration Card, or Bank Passbook<br>
+            3. <b>DOB Proof:</b> Birth Certificate or 10th Marksheet<br><br>
+            <a href="./pages/aadhaar.html" target="_self" style="background: #0284c7; color: #ffffff; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer;">🔗 Open Aadhaar Page</a>`;
+            speechReply = "Here are the details and link for Aadhaar card services.";
+        } 
+        else if (lowerText.includes('pan') || lowerText.includes('पैन')) {
+            botReply = `<b>PAN Card Services & Documents:</b><br><br>
+            Required documents for new PAN Card (Form 49A):<br>
+            1. <b>Identity Proof:</b> Aadhaar Card or Voter ID<br>
+            2. <b>Address Proof:</b> Aadhaar Card or Driving Licence<br>
+            3. <b>DOB Proof:</b> Birth Certificate<br><br>
+            <a href="./pages/pan.html" target="_self" style="background: #0284c7; color: #ffffff; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer;">🔗 Open PAN Page</a>`;
+            speechReply = "Here are the details and link for PAN card services.";
+        } 
+        else if (lowerText.includes('voter') || lowerText.includes('वोटर')) {
+            botReply = `<b>Voter ID Card Services & Documents:</b><br><br>
+            Required documents for Voter ID (Form 6):<br>
+            1. <b>Passport Size Photo</b><br>
+            2. <b>Age Proof:</b> Birth Certificate or School Certificate<br>
+            3. <b>Address Proof:</b> Aadhaar Card or Bank Passbook<br><br>
+            <a href="./pages/voter.html" target="_self" style="background: #0284c7; color: #ffffff; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer;">🔗 Open Voter Page</a>`;
+            speechReply = "Here are the details and link for Voter ID card services.";
+        }
+        else {
+            // DYNAMIC AUTO-SCAN: Website par bane sabhi service cards ko scan karega
+            let foundMatch = false;
+            const cards = document.querySelectorAll('.card'); // Aapki website ke saare service cards
+            
+            cards.forEach(card => {
+                const cardText = card.innerText.toLowerCase();
+                if (!foundMatch && cardText.includes(lowerText)) {
+                    foundMatch = true;
+                    // Card ke andar ka title aur button/link nikalna
+                    const titleElem = card.querySelector('h3') || card.querySelector('h4') || card;
+                    const linkElem = card.querySelector('a');
+                    const titleText = titleElem ? titleElem.innerText.split('\n')[0] : "Service Details";
+                    const linkHref = linkElem ? linkElem.getAttribute('href') : "./index.html";
+
+                    botReply = `<b>Service Found: ${titleText}</b><br><br>
+                    Here is the service information and direct link from your portal.<br><br>
+                    <a href="${linkHref}" target="_self" style="background: #0284c7; color: #ffffff; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer;">🔗 Open ${titleText}</a>`;
+                    speechReply = `I found the service ${titleText} for you.`;
+                }
+            });
+
+            if (!foundMatch) {
+                botReply = `Sorry, no service found matching "<b>${userText}</b>". Please check our homepage for the complete services list.<br><br><a href="./index.html" target="_self" style="background: #0284c7; color: #ffffff; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer;">🔗 Go to Home Page</a>`;
+                speechReply = "Sorry, no matching service found on the portal.";
+            }
+        }
+
+        // Display Bot Reply
+        const botMsgDiv = document.createElement('div');
+        botMsgDiv.className = 'bot-msg';
+        botMsgDiv.style.margin = '8px 0';
+        botMsgDiv.innerHTML = `<span style="background: #e2e8f0; color: #1e293b; padding: 8px 12px; border-radius: 8px; display: block;">${botReply}</span>`;
+        chatBody.appendChild(botMsgDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        speakText(speechReply);
+    }, 1000);
 };
 
-function addMessage(text, className) {
-    const body = document.getElementById('chat-body');
-    if (!body) return;
-    
-    const msgDiv = document.createElement('div');
-    msgDiv.className = className;
-    msgDiv.innerHTML = text;
-    body.appendChild(msgDiv);
-    body.scrollTop = body.scrollHeight;
-}
-
-function getAIResponse(text) {
-    const query = text.toLowerCase().trim();
-    let responseText = "";
-    
-    if (query.includes('आधार') || query.includes('aadhaar') || query.includes('adhar')) {
-        responseText = 'आधार सेवाओं के लिए यहाँ क्लिक करें:<br><br><a href="pages/aadhaar.html" target="_blank" style="background: #0284c7; color: #ffffff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">🔗 Aadhaar Page खोलें</a>';
-    } 
-    else if (query.includes('पैन') || query.includes('pan')) {
-        responseText = 'पैन कार्ड सेवाओं के लिए यहाँ क्लिक करें:<br><br><a href="pages/pan.html" target="_blank" style="background: #0284c7; color: #ffffff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">🔗 PAN Page खोलें</a>';
-    } 
-    else if (query.includes('किसान') || query.includes('pm kisan') || query.includes('pmkisan')) {
-        responseText = 'पीएम किसान योजना के लिए यहाँ क्लिक करें:<br><br><a href="pages/pmkisan.html" target="_blank" style="background: #0284c7; color: #ffffff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">🔗 PM-Kisan Page खोलें</a>';
-    } 
-    else if (query.includes('वोटर') || query.includes('voter')) {
-        responseText = 'वोटर आईडी सेवाओं के लिए यहाँ क्लिक करें:<br><br><a href="pages/voter.html" target="_blank" style="background: #0284c7; color: #ffffff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">🔗 Voter ID Page खोलें</a>';
-    } 
-    else if (query.includes('फॉर्म') || query.includes('form') || query.includes('pdf')) {
-        responseText = 'फॉर्म डाउनलोड करने के लिए यहाँ क्लिक करें:<br><br><a href="pages/forms.html" target="_blank" style="background: #0284c7; color: #ffffff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">🔗 Forms Page खोलें</a>';
-    } 
-    else {
-        // Yahan ab humne ek general link bhi add kar diya hai taaki button hamesha dikhe
-        responseText = "माफ़ कीजिए, मैं पूरी तरह समझ नहीं पाया। आप हमारी सभी सेवाओं की सूची यहाँ देख सकते हैं:<br><br><a href='index.html' style='background: #0284c7; color: #ffffff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;'>🔗 सभी सेवाएं देखें</a>";
-    }
-
-    // आवाज़ बोलते समय HTML टैग्स को हटाने के लिए
-    const plainTextForSpeech = responseText.replace(/<[^>]*>?/gm, '');
-    speakText(plainTextForSpeech);
-
-    return responseText;
-}
-
-
 window.startVoiceRecognition = function() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        alert("आपका ब्राउज़र वॉइस रिकग्निशन सपोर्ट नहीं करता।");
-        return;
-    }
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN';
-    
-    recognition.onresult = function(event) {
-        const inputField = document.getElementById('user-input');
-        if (inputField) {
-            inputField.value = event.results[0][0].transcript;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = function(event) {
+            const speechResult = event.results[0][0].transcript;
+            document.getElementById('user-input').value = speechResult;
             window.sendMessage();
-        }
-    };
-    
-    recognition.onerror = function() {
-        alert("आवाज़ पहचानने में समस्या आई। कृपया लिखकर कोशिश करें।");
-    };
-    
-    recognition.start();
+        };
+
+        recognition.start();
+    } else {
+        alert("Your browser does not support voice search.");
+    }
 };
