@@ -9,6 +9,12 @@
     <link rel="icon" type="image/png" href="sitelogo.png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 🌙 Dark Mode State Check Script -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+    </script>
 </head>
 <body>
 
@@ -40,7 +46,7 @@
                 </div>
 
                 <!-- ☰ 3-Line Menu Trigger Button -->
-                <button class="hamburger-btn" id="menuToggle" aria-label="Toggle Navigation">
+                <button class="hamburger-btn" id="menuToggle" onclick="toggleSidebar()" aria-label="Toggle Navigation">
                     <i class="fa-solid fa-bars"></i>
                 </button>
             </div>
@@ -50,7 +56,7 @@
     </header>
 
     <!-- 📱 Side Drawer Overlay Menu -->
-    <div class="side-menu-overlay" id="menuOverlay"></div>
+    <div class="side-menu-overlay" id="menuOverlay" onclick="toggleSidebar()"></div>
 
     <div class="side-menu" id="sideMenu">
         <div class="side-menu-header">
@@ -87,20 +93,21 @@
                     <li><a href="pages/contact.html"><i class="fa-solid fa-envelope"></i> <span data-key="menu_contact">Contact Us</span></a></li>
                 </ul>
             </li>
-        </ul>
-        <li class="menu-item" style="list-style: none;">
-            <a href="#" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; text-decoration: none; color: #333;">
-                <span><i class="fa-solid fa-language" style="margin-right: 15px; color: #2563eb;"></i> <span data-key="menu_language">Change Language</span></span>
-                <select id="languageSelect" onchange="changeLanguage(this.value)" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; cursor: pointer;">
-                    <option value="en">English</option>
-                    <option value="hi">हिंदी</option>
-                    <option value="gu">ગુજરાતી</option>
-                    <option value="mr">मराठी</option>
-                </select>
-            </a>
-        </li>
-    </div>
 
+            <!-- Language Change Option Inside List -->
+            <li style="padding: 12px 20px; border-top: 1px solid #e2e8f0; margin-top: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fa-solid fa-language" style="margin-right: 15px; color: #2563eb;"></i> <span data-key="menu_language">Change Language</span></span>
+                    <select id="languageSelect" onchange="changeLanguage(this.value)" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; cursor: pointer;">
+                        <option value="en">English</option>
+                        <option value="hi">हिंदी</option>
+                        <option value="gu">ગુજરાતી</option>
+                        <option value="mr">मराठी</option>
+                    </select>
+                </div>
+            </li>
+        </ul>
+    </div>
     <!-- 📢 Live Notice / Ticker Bar -->
     <div class="ticker-container">
         <div class="ticker-title">
@@ -276,6 +283,8 @@
             <button onclick="sendMessage()" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
+
+
     
     <!-- Website Core & Chatbot JavaScript Functions -->
     <script>

@@ -24,22 +24,35 @@ document.addEventListener('DOMContentLoaded', function () {
         menuOverlay.addEventListener('click', toggleSidebar);
     }
 
-    // 2. Dark Mode Toggle Inside Menu
+ document.addEventListener('DOMContentLoaded', function () {
     const themeToggleMenu = document.getElementById('themeToggleMenu');
     const themeMenuText = document.getElementById('themeMenuText');
+
+    // Page load par text aur icon set karna
+    if (document.body.classList.contains('dark-theme')) {
+        if (themeMenuText) {
+            themeMenuText.innerHTML = '<i class="fa-solid fa-sun"></i> Light Mode';
+        }
+    }
 
     if (themeToggleMenu) {
         themeToggleMenu.addEventListener('click', () => {
             document.body.classList.toggle('dark-theme');
-
+            
             if (document.body.classList.contains('dark-theme')) {
-                themeMenuText.innerHTML = '<i class="fa-solid fa-sun"></i> Light Mode';
+                localStorage.setItem('theme', 'dark'); // Save state
+                if (themeMenuText) {
+                    themeMenuText.innerHTML = '<i class="fa-solid fa-sun"></i> Light Mode';
+                }
             } else {
-                themeMenuText.innerHTML = '<i class="fa-solid fa-moon"></i> Dark Mode';
+                localStorage.setItem('theme', 'light'); // Save state
+                if (themeMenuText) {
+                    themeMenuText.innerHTML = '<i class="fa-solid fa-moon"></i> Dark Mode';
+                }
             }
         });
     }
-
+});
     // 3. Live Search Filter
     const mainSearchInput = document.getElementById('searchInput') || document.getElementById('service-search');
     if (mainSearchInput) {
